@@ -4,6 +4,7 @@
     "database": "nodemain",
     "synchronize": true,
     "logging": false,
+    "useUnifiedTopology": true,
     "entities": [
       "src/entity/*.js"
     ],
