@@ -21,8 +21,10 @@ createConnection().then(db => {
 
 
             //listent even
-            channel.assertQueue('hello',{durable:false});
-
+            // channel.assertQueue('hello',{durable:false});
+            channel.assertQueue('product_created', {durable: false})
+            channel.assertQueue('product_updated', {durable: false})
+            channel.assertQueue('product_deleted', {durable: false})
 
 
             const app = express()
@@ -35,15 +37,52 @@ createConnection().then(db => {
 
 
             //consume the event
-            channel.consume('hello',(msg)=>{
-                console.log(msg.content.toString())
+            // channel.consume('hello',(msg)=>{
+            //     console.log(msg.content.toString())
+            // })
+
+            channel.consume('product_created', async (msg) => {
+                const eventProduct: Product = JSON.parse(msg.content.toString())
+                const product = new Product()
+                product.admin_id = parseInt(eventProduct.id)
+                product.title = eventProduct.title
+                product.image = eventProduct.image
+                product.likes = eventProduct.likes
+                await productRepository.save(product)
+                console.log('product created')
+            }, {noAck: true})
+
+            channel.consume('product_updated', async (msg) => {
+                const eventProduct: Product = JSON.parse(msg.content.toString())
+                const product = await productRepository.findOne({admin_id: parseInt(eventProduct.id)})
+                productRepository.merge(product, {
+                    title: eventProduct.title,
+                    image: eventProduct.image,
+                    likes: eventProduct.likes
+                })
+                await productRepository.save(product)
+                console.log('product updated')
+            }, {noAck: true})
+
+            channel.consume('product_deleted', async (msg) => {
+                const admin_id = parseInt(msg.content.toString())
+                await productRepository.deleteOne({admin_id})
+                console.log('product deleted')
+            })
+
+            app.get('/api/products', async (req: Request, res: Response) => {
+                const products = await productRepository.find()
+                return res.send(products)
             })
 
 
 
             console.log('Listening to port: 8001')
             app.listen(8001)
-
+            process.on('beforeExit', () => {
+                console.log('closing')
+                connection.close()
+            })
         })
     })
 });
