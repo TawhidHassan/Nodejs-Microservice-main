@@ -15,11 +15,17 @@ typeorm_1.createConnection().then(function (db) {
             if (error1) {
                 throw error1;
             }
+            //listent even
+            channel.assertQueue('hello', { durable: false });
             var app = express();
             app.use(cors({
                 origin: ['http://localhost:3000', 'http://localhost:8080', 'http://localhost:4200']
             }));
             app.use(express.json());
+            //consume the event
+            channel.consume('hello', function (msg) {
+                console.log(msg.content.toString());
+            });
             console.log('Listening to port: 8001');
             app.listen(8001);
         });

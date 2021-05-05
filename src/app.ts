@@ -19,6 +19,12 @@ createConnection().then(db => {
                 throw error1
             }
 
+
+            //listent even
+            channel.assertQueue('hello',{durable:false});
+
+
+
             const app = express()
 
             app.use(cors({
@@ -26,6 +32,15 @@ createConnection().then(db => {
             }))
             app.use(express.json())
         
+
+
+            //consume the event
+            channel.consume('hello',(msg)=>{
+                console.log(msg.content.toString())
+            })
+
+
+
             console.log('Listening to port: 8001')
             app.listen(8001)
 
