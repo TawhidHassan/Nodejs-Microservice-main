@@ -4,6 +4,7 @@ import * as cors from 'cors'
 import {createConnection} from "typeorm";
 import * as amqp from 'amqplib/callback_api';
 import {Product} from "./entity/product";
+import axios from 'axios';
 
 createConnection().then(db => {
     const productRepository = db.getMongoRepository(Product)
@@ -75,7 +76,13 @@ createConnection().then(db => {
                 return res.send(products)
             })
 
-
+            app.post('/api/products/:id/like', async (req: Request, res: Response) => {
+                const product = await productRepository.findOne(req.params.id)
+                await axios.post(`http://localhost:8000/api/products/${product.admin_id}/like`, {})
+                product.likes++
+                await productRepository.save(product)
+                return res.send(product)
+            });
 
             console.log('Listening to port: 8001')
             app.listen(8001)

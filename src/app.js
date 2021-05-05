@@ -41,6 +41,7 @@ var cors = require("cors");
 var typeorm_1 = require("typeorm");
 var amqp = require("amqplib/callback_api");
 var product_1 = require("./entity/product");
+var axios_1 = require("axios");
 typeorm_1.createConnection().then(function (db) {
     var productRepository = db.getMongoRepository(product_1.Product);
     amqp.connect('amqps://inwmlcbs:3e-VURKX4cVGWW5OGxMp_lHYio7du_-R@clam.rmq.cloudamqp.com/inwmlcbs', function (error0, connection) {
@@ -128,6 +129,24 @@ typeorm_1.createConnection().then(function (db) {
                         case 1:
                             products = _a.sent();
                             return [2 /*return*/, res.send(products)];
+                    }
+                });
+            }); });
+            app.post('/api/products/:id/like', function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
+                var product;
+                return __generator(this, function (_a) {
+                    switch (_a.label) {
+                        case 0: return [4 /*yield*/, productRepository.findOne(req.params.id)];
+                        case 1:
+                            product = _a.sent();
+                            return [4 /*yield*/, axios_1.default.post("http://localhost:8000/api/products/" + product.admin_id + "/like", {})];
+                        case 2:
+                            _a.sent();
+                            product.likes++;
+                            return [4 /*yield*/, productRepository.save(product)];
+                        case 3:
+                            _a.sent();
+                            return [2 /*return*/, res.send(product)];
                     }
                 });
             }); });
